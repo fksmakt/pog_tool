@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+cache/*.html
+cache/debug_*.txt
+.pytest_cache/
