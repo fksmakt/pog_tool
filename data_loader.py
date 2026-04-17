@@ -1,3 +1,6 @@
+# POG馬データローダー。
+# Documents/POG_LIST (2).xlsx を読み込んでDataFrameを返す。
+# load_horses() はプロセス内でキャッシュされる。呼び出し側はDataFrameをin-placeで変更しないこと。
 import pandas as pd
 from functools import lru_cache
 
@@ -27,13 +30,16 @@ COLUMN_MAP = {
 
 @lru_cache(maxsize=1)
 def load_horses() -> pd.DataFrame:
-    df = pd.read_excel(EXCEL_PATH, engine='openpyxl')
-    # 必要な列だけ残す
+    try:
+        df = pd.read_excel(EXCEL_PATH, engine='openpyxl')
+    except Exception as e:
+        raise RuntimeError(
+            f"Excelファイルの読み込みに失敗しました: {EXCEL_PATH}\n原因: {e}"
+        ) from e
     cols = [c for c in COLUMN_MAP.keys() if c in df.columns]
     df = df[cols].rename(columns=COLUMN_MAP)
-    # 血統登録番号を文字列に統一
     df['血統登録番号'] = df['血統登録番号'].astype(str).str.strip()
-    # 称号候補フラグの初期値
+    # 称号候補/称号説明はTask4のapply_achievement_flagsで上書きされる初期値
     df['称号候補'] = False
     df['称号説明'] = ''
     return df.copy()
