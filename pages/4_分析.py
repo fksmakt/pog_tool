@@ -5,7 +5,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.set_page_config(page_title="分析", layout="wide")
+st.set_page_config(page_title="分析")
 st.title("📊 過去20年の傾向分析")
 
 HISTORY_PATH = Path(__file__).parent.parent / 'cache' / 'history.json'

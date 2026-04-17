@@ -3,7 +3,7 @@ import streamlit as st
 from data_loader import load_horses_with_flags
 from scraper import submit_draft
 
-st.set_page_config(page_title="マイリスト", layout="wide")
+st.set_page_config(page_title="マイリスト")
 st.title("📋 マイリスト")
 
 if 'male_list' not in st.session_state:
@@ -32,16 +32,15 @@ def render_list(session_key: str, sex_label: str):
         bg = "🏆 " if is_ach else ""
         nominated = "🟢" if i < 5 else "⚪"
 
-        col1, col2, col3, col4 = st.columns([1, 5, 3, 1])
+        col1, col2, col3 = st.columns([1, 7, 1])
         with col1:
             st.write(f"{nominated} **{i+1}**")
         with col2:
-            st.write(f"{bg}{name}（{sire}）")
-        with col3:
             ach_text = info.get('称号説明', '')
+            st.write(f"{bg}{name}（{sire}）")
             if ach_text:
                 st.caption(ach_text[:60])
-        with col4:
+        with col3:
             if st.button("✕", key=f"rm_{session_key}_{i}"):
                 indices_to_remove.append(i)
 
@@ -50,15 +49,13 @@ def render_list(session_key: str, sex_label: str):
     st.session_state[session_key] = lst
 
 
-col_m, col_f = st.columns(2)
+st.subheader("🔵 牡馬リスト")
+render_list('male_list', '牡')
 
-with col_m:
-    st.subheader("🔵 牡馬リスト")
-    render_list('male_list', '牡')
+st.divider()
 
-with col_f:
-    st.subheader("🔴 牝馬リスト")
-    render_list('female_list', '牝')
+st.subheader("🔴 牝馬リスト")
+render_list('female_list', '牝')
 
 # ===== 送信セクション =====
 st.divider()

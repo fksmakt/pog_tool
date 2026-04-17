@@ -1,12 +1,13 @@
 # POG馬データローダー。
 # Documents/POG_LIST (2).xlsx を読み込んでDataFrameを返す。
 # load_horses() はプロセス内でキャッシュされる。呼び出し側はDataFrameをin-placeで変更しないこと。
+from pathlib import Path
 import pandas as pd
 from functools import lru_cache
 
 from scraper import fetch_advice
 
-EXCEL_PATH = r'C:\Users\aktfk\Documents\POG_LIST (2).xlsx'
+EXCEL_PATH = Path(__file__).parent / 'data' / 'pog_list.xlsx'
 
 COLUMN_MAP = {
     'No.': 'No',

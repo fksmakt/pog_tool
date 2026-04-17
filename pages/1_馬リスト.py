@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 from data_loader import load_horses_with_flags
 
-st.set_page_config(page_title="馬リスト", layout="wide")
+st.set_page_config(page_title="馬リスト")
 st.title("🐎 馬リスト")
 
 # セッション状態の初期化
@@ -58,11 +58,8 @@ st.dataframe(
 # ===== リスト追加 =====
 st.divider()
 st.subheader("リストに追加")
-col1, col2 = st.columns(2)
-with col1:
-    selected_no = st.text_input("血統登録番号を入力（または上のテーブルからコピー）")
-with col2:
-    add_sex = st.radio("追加先", ["牡リスト", "牝リスト"], horizontal=True)
+selected_no = st.text_input("血統登録番号を入力（上のテーブルからコピー）")
+add_sex = st.radio("追加先", ["牡リスト", "牝リスト"], horizontal=True)
 
 if st.button("➕ リストに追加", type="primary"):
     if selected_no:

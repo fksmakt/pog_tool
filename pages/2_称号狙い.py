@@ -3,7 +3,7 @@ import streamlit as st
 from data_loader import load_horses_with_flags
 from scraper import fetch_advice
 
-st.set_page_config(page_title="称号狙い", layout="wide")
+st.set_page_config(page_title="称号狙い")
 st.title("🏆 称号狙い候補")
 
 st.markdown("""
@@ -32,17 +32,13 @@ def show_advice(advice_list, sex_label):
         with st.expander(f"🏆 **{horse_name}** （{item.get('sire','')} × {item.get('dam','')}）　{item.get('trainer','')}（{item.get('stable','')}）"):
             if not row.empty:
                 reg_no = row.iloc[0]['血統登録番号']
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.write(f"**血統登録番号**: `{reg_no}`")
-                    st.write(f"**産地**: {row.iloc[0].get('産地','')}")
-                    st.write(f"**取引価格**: {row.iloc[0].get('取引価格','')}")
-                with col2:
-                    if st.button(f"➕ {sex_label}リストへ", key=f"add_{sex_label}_{reg_no}"):
-                        target = st.session_state.male_list if sex_label == '牡' else st.session_state.female_list
-                        if reg_no not in target:
-                            target.append(reg_no)
-                            st.success("追加しました！")
+                st.write(f"**血統登録番号**: `{reg_no}`")
+                st.write(f"**産地**: {row.iloc[0].get('産地','')}　**取引価格**: {row.iloc[0].get('取引価格','')}")
+                if st.button(f"➕ {sex_label}リストへ追加", key=f"add_{sex_label}_{reg_no}", type="primary"):
+                    target = st.session_state.male_list if sex_label == '牡' else st.session_state.female_list
+                    if reg_no not in target:
+                        target.append(reg_no)
+                        st.success("追加しました！")
             else:
                 st.warning(f"⚠️ この馬は全頭リストに見つかりませんでした: {horse_name}")
 
