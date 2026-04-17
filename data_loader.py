@@ -66,6 +66,6 @@ def apply_achievement_flags(df: pd.DataFrame, advice: list[dict]) -> pd.DataFram
 
 @lru_cache(maxsize=1)
 def load_horses_with_flags() -> pd.DataFrame:
-    df = load_horses()
+    df = load_horses().copy()  # load_horsesのキャッシュを汚染しないようにコピー
     advice = fetch_advice_both()
     return apply_achievement_flags(df, advice)
