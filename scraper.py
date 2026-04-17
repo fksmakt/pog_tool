@@ -1,5 +1,4 @@
 import json
-import os
 import re
 import time
 from pathlib import Path
@@ -11,7 +10,7 @@ BASE_URL = 'https://tep.sakura.ne.jp/pog'
 USER_ID = '8'
 PASSWORD = 'sika'
 YEAR = 2026
-CACHE_DIR = Path(r'C:\Users\aktfk\pog-tool\cache')
+CACHE_DIR = Path(__file__).parent / 'cache'
 CACHE_DIR.mkdir(exist_ok=True)
 
 HEADERS = {
@@ -127,5 +126,7 @@ def fetch_advice(sex: int, use_cache: bool = True) -> list[dict]:
     r = s.get(url)
     r.raise_for_status()
     data = _parse_advice_html(r.content)
+    if not data:
+        raise ValueError(f"0頭しか取得できませんでした: {url} — 認証またはHTMLの構造を確認してください")
     cache_file.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
     return data
