@@ -130,3 +130,31 @@ def fetch_advice(sex: int, use_cache: bool = True) -> list[dict]:
         raise ValueError(f"0頭しか取得できませんでした: {url} — 認証またはHTMLの構造を確認してください")
     cache_file.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
     return data
+
+
+def build_draft_payload(male_ids: list[str], female_ids: list[str]) -> dict:
+    return {
+        'draftEntry1': '\n'.join(male_ids[:50]),
+        'draftEntry2': '\n'.join(female_ids[:50]),
+        'draftEntry': 'この内容で登録する',
+    }
+
+
+def submit_draft(male_ids: list[str], female_ids: list[str]) -> dict:
+    """ぽぐ！にリストを送信する。戻り値: {'success': bool, 'message': str}"""
+    s = get_session()
+    payload = build_draft_payload(male_ids, female_ids)
+    url = f'{BASE_URL}/draftEntry.php?year={YEAR}'
+    r = s.post(url, data=payload)
+    r.raise_for_status()
+
+    soup = BeautifulSoup(r.content, 'lxml', from_encoding='utf-8')
+    main = soup.find('div', id='NoColumn') or soup.find('body')
+    text = main.get_text(' ', strip=True) if main else r.text[:200]
+
+    if '登録' in text and ('完了' in text or '受付' in text or 'リスト順' in text):
+        return {'success': True, 'message': '登録完了しました！'}
+    elif 'エラー' in text or 'error' in text.lower():
+        return {'success': False, 'message': f'エラー: {text[:200]}'}
+    else:
+        return {'success': True, 'message': f'送信完了（応答: {text[:100]}）'}
