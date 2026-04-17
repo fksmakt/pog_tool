@@ -41,10 +41,12 @@ display_cols = [c for c in display_cols if c in filtered.columns]
 
 # 称号候補に🏆マーク
 show_df = filtered[display_cols].copy()
-show_df.insert(0, '称号', show_df['称号候補'].apply(lambda x: '🏆' if x else ''))
+if '称号候補' in show_df.columns:
+    show_df.insert(0, '称号', show_df['称号候補'].apply(lambda x: '🏆' if x else ''))
+    show_df = show_df.drop(columns=['称号候補'])
 
 st.dataframe(
-    show_df.drop(columns=['称号候補']),
+    show_df,
     use_container_width=True,
     hide_index=True,
     column_config={
