@@ -123,7 +123,7 @@ def fetch_advice(sex: int, use_cache: bool = True) -> list[dict]:
 
     s = get_session()
     url = f'{BASE_URL}/advice.php?UserId={USER_ID}&year={YEAR}&sex={sex}'
-    r = s.get(url)
+    r = s.get(url, timeout=30)
     r.raise_for_status()
     data = _parse_advice_html(r.content)
     if not data:
@@ -145,7 +145,7 @@ def submit_draft(male_ids: list[str], female_ids: list[str]) -> dict:
     s = get_session()
     payload = build_draft_payload(male_ids, female_ids)
     url = f'{BASE_URL}/draftEntry.php?year={YEAR}'
-    r = s.post(url, data=payload)
+    r = s.post(url, data=payload, timeout=30)
     r.raise_for_status()
 
     soup = BeautifulSoup(r.content, 'lxml', from_encoding='utf-8')

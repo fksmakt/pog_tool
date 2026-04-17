@@ -10,8 +10,12 @@ st.title("📊 過去20年の傾向分析")
 
 HISTORY_PATH = Path(__file__).parent.parent / 'cache' / 'history.json'
 
-with HISTORY_PATH.open(encoding='utf-8') as f:
-    raw = json.load(f)
+try:
+    with HISTORY_PATH.open(encoding='utf-8') as f:
+        raw = json.load(f)
+except FileNotFoundError:
+    st.error(f"history.jsonが見つかりません: {HISTORY_PATH}\nDocumentsフォルダからcache/にコピーしてください。")
+    st.stop()
 
 # 全馬をフラットに
 rows = []

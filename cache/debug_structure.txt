@@ -1,0 +1,58 @@
+<div id="NoColumn">
+<div class="Indent">
+<div class="navi">
+<ul>
+<li class="head">
+<a href="./index.php?year=2026">ぽぐ！2026-2027トップページに戻る</a>
+</li>
+</ul>
+</div>
+<div class="navi"><ul><li class="top">[ぽぐ！2026-2027]ぷにさんにお勧めの牡馬</li>
+<li><a href="./advice.php?UserId=8&amp;year=2026&amp;sex=2">牝馬</a>
+</li>
+</ul>
+</div>
+<div class="clear"><hr/></div>
+<div class="BasicT">
+<table>
+<tr>
+<th>No.</th>
+<th>馬名</th>
+<th>配合</th>
+</tr>
+<tr style="background: #d1e8ff;">
+<td class="cen" rowspan="2" width="20">No.1</td>
+<td rowspan="2" width="150"><a href="http://db.netkeiba.com/horse/2024106452"><img alt="チェスティーノ" border="0" class="icon" src="./img/favicon.gif"/></a> <a class="horse" href="./horse.php?HorseId=2024106452">チェスティーノ</a></td>
+<td class="ts">父：<a class="horse" href="./horse.php?HorseId=2018105027">エフフォーリア</a> 母：<a class="horse" href="./horse.php?HorseId=2013106005">チェッキーノ</a> (母父：<a class="horse" href="./horse.php?HorseId=2001103460">キングカメハメハ</a>)</td>
+<tr style="background: #d1e8ff;">
+<td class="zaikyu"><span class="month" style="background: #87c14a;color:#ffffff;font-size : 11px;padding: 2px;margin: 0px 5px 1px 1px;">厩舎</span>鹿戸雄一 (美浦)  <span class="month" style="background: #874ac1;color:#ffffff;font-size : 11px;padding: 2px;margin: 0px 5px 1px 1px;">生産者</span>ノーザンファーム  <span class="month" style="background: #c14a87;color:#ffffff;font-size : 11px;padding: 2px;margin: 0px 5px 1px 1px;">馬主</span>サンデーレーシング</td>
+</tr>
+</tr>
+<tr>
+
+</tr></table></div>
+<td colspan="3"><div class="echo">
+<ul>
+<li style='background:url("./icon/B22.gif") no-repeat;font-size : 14px;'>[2015]けん： <img border="0" src="./img/rank2.gif" width="15"/> <span class="month" style="background: #DB8888;padding: 5px;">母</span><a class="horse" href="./horse.php?HorseId=2013106005">チェッキーノ</a><span class="date">(父:<a class="horse" href="./horse.php?HorseId=2001103460">キングカメハメハ</a>)<span class="month" style="background: #4ac187;color:#ffffff;">ぷに[3]</span> サンスポ賞フローラS(G2) <b><font color="red">1着</font></b></span></li>
+<li style='background:url("./icon/A26.gif") no-repeat;font-size : 14px;'>[2022]ＴＥＰ： <img border="0" src="./img/rank2.gif" width="15"/> <span class="month" style="background: #CCDFFF;padding: 5px;">兄</span><a class="horse" href="./horse.php?HorseId=2020103472">ノッキングポイント</a><span class="date">(父:<a class="horse" href="./horse.php?HorseId=2011100655">モーリス</a>)<span class="month" style="background: #4ac187;color:#ffffff;">ぷに[16]</span> 東京優駿(GI) 5着</span></li>
+<li style='background:url("./icon/B23.gif") no-repeat;font-size : 14px;'>[2023]むねし： <img border="0" src="./img/rank1.gif" width="15"/> <span class="month" style="background: #F0C8A0;padding: 5px;">姉</span><a class="horse" href="./horse.php?HorseId=2021105643">チェルヴィニア</a><span class="date">(父:<a class="horse" href="./horse.php?KettoC=1120002219">ハービンジャー</a>)<span class="month" style="background: #4ac187;color:#ffffff;">ぷに[44]</span> 優駿牝馬(GI) <b><font color="red">1着</font></b></span></li>
+<li style='background:url("./icon/B11.gif") no-repeat;font-size : 14px;'>[2024]ニールセン： <img border="0" src="./img/rank5.gif" width="15"/> <span class="month" style="background: #CCDFFF;padding: 5px;">兄</span><a class="horse" href="./horse.php?HorseId=2022104898">アルレッキーノ</a><span class="date">(父:<a class="horse" href="./horse.php?KettoC=1120002504">ブリックスアンドモルタル</a>)<span class="month" style="background: #4ac187;color:#ffffff;">ぷに[2]</span> 2歳未勝利 <b><font color="red">1着</font></b></span></li>
+<li style='background:url("./icon/A16.gif") no-repeat;font-size : 14px;'>[2025]ぷに： <img border="0" src="./img/rank6.gif" width="15"/> <span class="month" style="background: #CCDFFF;padding: 5px;">兄</span><a class="horse" href="./horse.php?HorseId=2023107106">チェルヴァーラ</a><span class="date">(父:<a class="horse" href="./horse.php?HorseId=2010104155">エピファネイア</a>)<span class="month" style="background: #4ac187;color:#ffffff;">ぷに[2]</span> 2歳新馬 3着</span></li>
+</ul></div></td>
+
+<tr style="background: #d1e8ff;">
+<td class="cen" rowspan="2" width="20">No.2</td>
+<td rowspan="2" width="150"><a href="http://db.netkeiba.com/horse/2024107171"><img alt="ロイヤルシャレード" border="0" class="icon" src="./img/favicon.gif"/></a> <a class="horse" href="./horse.php?HorseId=2024107171">ロイヤルシャレード</a></td>
+<td class="ts">父：<a class="horse" href="./horse.php?KettoC=1120002504">ブリックスアンドモルタル</a> 母：<a class="horse" href="./horse.php?HorseId=2006102673">メジロシャレード</a> (母父：<a class="horse" href="./horse.php?KettoC=1120001916">マンハッタンカフェ</a>)</td>
+<tr style="background: #d1e8ff;">
+<td class="zaikyu"><span class="month" style="background: #87c14a;color:#ffffff;font-size : 11px;padding: 2px;margin: 0px 5px 1px 1px;">厩舎</span>昆貢 (栗東)  <span class="month" style="background: #874ac1;color:#ffffff;font-size : 11px;padding: 2px;margin: 0px 5px 1px 1px;">生産者</span>レイクヴィラファーム  <span class="month" style="background: #c14a87;color:#ffffff;font-size : 11px;padding: 2px;margin: 0px 5px 1px 1px;">馬主</span>ＤＭＭドリームクラブ</td>
+</tr>
+</tr>
+<tr>
+
+</tr></div>
+<td colspan="3"><div class="echo">
+<ul>
+<li style='background:url("./icon/A16.gif") no-repeat;font-size : 14px;'>[2008]ぷに： <img border="0" src="./img/rank5.gif" width="15"/> <span class="month" style="background: #DB8888;padding: 5px;">母</span><a class="horse" href="./horse.php?HorseId=2006102673">メジロシャレード</a><span class="date">(父:<a class="horse" href="./horse.php?KettoC=1120001916">マンハッタンカフェ</a>)<span class="month" style="background: #4ac187;color:#ffffff;">ぷに[1]</span> 2歳未勝利 <b><font color="red">1着</font></b></span></li>
+<li style='background:url("./icon/B16.gif") no-repeat;font-size : 14px;'>[2013]None： <img border="0" src="./img/rank2.gif" width="15"/> <span class="month" style="background: #CCDFFF;padding: 5px;">兄</span><a class="horse" href="./horse.php?HorseId=2011102893">ショウナンラグーン</a><span class="date">(父:<a class="horse" href="./horse.php?KettoC=1120001964">シンボリクリスエス</a>) テレビ東京杯青葉賞(G2) <b><font color="red">1着</font></b></span></li>
+<li style='background:url("./icon/B16.gif") no-repeat;font-size : 14px;'>[201

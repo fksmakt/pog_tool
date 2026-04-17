@@ -38,7 +38,7 @@ def show_advice(advice_list, sex_label):
                     st.write(f"**産地**: {row.iloc[0].get('産地','')}")
                     st.write(f"**取引価格**: {row.iloc[0].get('取引価格','')}")
                 with col2:
-                    if st.button(f"➕ {sex_label}リストへ", key=f"add_{reg_no}"):
+                    if st.button(f"➕ {sex_label}リストへ", key=f"add_{sex_label}_{reg_no}"):
                         target = st.session_state.male_list if sex_label == '牡' else st.session_state.female_list
                         if reg_no not in target:
                             target.append(reg_no)

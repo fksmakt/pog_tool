@@ -67,6 +67,10 @@ st.subheader("🚀 ぽぐ！に送信")
 male_count = len(st.session_state.male_list)
 female_count = len(st.session_state.female_list)
 st.info(f"牡: {male_count}頭 / 牝: {female_count}頭がリストに入っています")
+if male_count > 50:
+    st.warning(f"⚠️ 牡リストが{male_count}頭あります。送信時は上位50頭のみ登録されます。")
+if female_count > 50:
+    st.warning(f"⚠️ 牝リストが{female_count}頭あります。送信時は上位50頭のみ登録されます。")
 
 if male_count == 0 and female_count == 0:
     st.warning("リストが空です。馬リストから追加してください。")

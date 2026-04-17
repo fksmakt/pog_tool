@@ -53,6 +53,7 @@ def fetch_advice_both() -> list[dict]:
 
 
 def apply_achievement_flags(df: pd.DataFrame, advice: list[dict]) -> pd.DataFrame:
+    df = df.copy()
     advice_names = {item['horse_name']: item for item in advice}
     for idx, row in df.iterrows():
         horse_name = str(row.get('馬名', ''))
