@@ -4,6 +4,8 @@
 import pandas as pd
 from functools import lru_cache
 
+from scraper import fetch_advice
+
 EXCEL_PATH = r'C:\Users\aktfk\Documents\POG_LIST (2).xlsx'
 
 COLUMN_MAP = {
@@ -28,6 +30,7 @@ COLUMN_MAP = {
     '母父チェックType': '母父血統系統',
 }
 
+
 @lru_cache(maxsize=1)
 def load_horses() -> pd.DataFrame:
     try:
@@ -43,3 +46,26 @@ def load_horses() -> pd.DataFrame:
     df['称号候補'] = False
     df['称号説明'] = ''
     return df.copy()
+
+
+def fetch_advice_both() -> list[dict]:
+    return fetch_advice(sex=1) + fetch_advice(sex=2)
+
+
+def apply_achievement_flags(df: pd.DataFrame, advice: list[dict]) -> pd.DataFrame:
+    advice_names = {item['horse_name']: item for item in advice}
+    for idx, row in df.iterrows():
+        horse_name = str(row.get('馬名', ''))
+        if horse_name in advice_names:
+            item = advice_names[horse_name]
+            df.at[idx, '称号候補'] = True
+            conn_str = ' / '.join(item['connections'][:3]) if item['connections'] else ''
+            df.at[idx, '称号説明'] = conn_str
+    return df
+
+
+@lru_cache(maxsize=1)
+def load_horses_with_flags() -> pd.DataFrame:
+    df = load_horses()
+    advice = fetch_advice_both()
+    return apply_achievement_flags(df, advice)
