@@ -176,21 +176,23 @@ def fetch_horse_card_info(reg_no: str, use_cache: bool = True) -> dict:
 
     result: dict = {'bbs_count': 0, 'relatives': []}
 
-    # BBS件数
+    # BBS件数（bbs.netkeiba.com の api_get_total_count を使用）
     try:
-        r = requests.get(
-            f'https://db.netkeiba.com/?pid=horse_board&id={reg_no}',
-            headers=_HEADERS, timeout=15,
+        r = requests.post(
+            'https://bbs.netkeiba.com/',
+            data={
+                'pid': 'api_get_total_count',
+                'input': 'UTF-8',
+                'output': 'jsonp',
+                'subcategory_id': reg_no,
+                'category_cd': 'horse',
+            },
+            headers={**_HEADERS, 'Referer': 'https://db.netkeiba.com/'},
+            timeout=15,
         )
         r.raise_for_status()
-        text = r.content.decode('euc-jp', errors='replace')
-        soup = BeautifulSoup(text, 'lxml')
-        body_text = soup.get_text(' ')
-        m = re.search(r'全\s*(\d+)\s*件', body_text) or re.search(r'(\d+)\s*件', body_text)
-        if m:
-            result['bbs_count'] = int(m.group(1))
-        else:
-            result['bbs_count'] = len(soup.find_all('dt'))
+        m = re.search(r'(\d+)', r.text)
+        result['bbs_count'] = int(m.group(1)) if m else 0
     except Exception:
         pass
 
