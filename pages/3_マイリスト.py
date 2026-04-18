@@ -1,5 +1,6 @@
 # pages/3_マイリスト.py
 import streamlit as st
+from streamlit_sortables import sort_items
 from data_loader import load_horses_with_flags
 from scraper import submit_draft
 from list_store import init_lists, save_lists
@@ -21,7 +22,7 @@ _available = [c for c in _EXTRA_COLS if c in df.columns]
 id_to_info = df.set_index('血統登録番号')[_available].to_dict('index')
 
 MARK_CYCLE = ['', 'red', 'blue', 'green']
-MARK_EMOJI = {'': '⬜', 'red': '🔴', 'blue': '🔵', 'green': '🟢'}
+MARK_EMOJI = {'': '', 'red': '🔴', 'blue': '🔵', 'green': '🟢'}
 
 
 def _format_prize(amount) -> str:
@@ -36,134 +37,141 @@ def _format_prize(amount) -> str:
     return f'{int(v / 1e4):,}万円'
 
 
-def _render_card(info: dict, card: dict | None):
+def _make_display(reg_no: str, marks: dict) -> str:
+    info = id_to_info.get(reg_no, {})
+    name = info.get('馬名', reg_no)
     sire = info.get('父名', '') or ''
-    dam = info.get('母名', '') or ''
-    damsire = info.get('母父名', '') or ''
-    breeder = info.get('生産者', '') or ''
-    trainer = info.get('調教師', '') or ''
-    siblings_total = info.get('兄弟賞金合計', 0)
-
-    pedigree = f"父 **{sire}**" if sire else ''
-    if dam:
-        pedigree += f"　母 {dam}"
-        if damsire:
-            pedigree += f"（母父 {damsire}）"
-    if pedigree:
-        st.caption(pedigree)
-
-    farm_line = ''
-    if breeder:
-        farm_line += f"🌾 {breeder}"
-    if trainer and str(trainer) not in ('nan', ''):
-        farm_line += f"　🏛 {trainer}"
-    if farm_line:
-        st.caption(farm_line)
-
-    detail_parts = []
-    prize_str = _format_prize(siblings_total)
-    if prize_str:
-        detail_parts.append(f"兄弟賞金合計: {prize_str}")
-    if card is not None:
-        bbs = card.get('bbs_count', 0)
-        detail_parts.append(f"💬 掲示板: {bbs}件")
-    else:
-        detail_parts.append("💬 掲示板: 未取得")
-    st.caption("　".join(detail_parts))
-
-    if card is not None:
-        rels = card.get('relatives', [])
-        if rels:
-            st.caption("活躍近親: " + " / ".join(rels[:3]))
+    mark = marks.get(reg_no, '')
+    prefix = MARK_EMOJI.get(mark, '') + ' ' if mark else ''
+    return f"{prefix}{name}（{sire}）"
 
 
 def render_list(session_key: str):
-    lst = st.session_state[session_key]
+    lst = list(st.session_state[session_key])
     max_count = 50
     st.caption(f"{len(lst)}/{max_count}頭 | 上位5頭が指名確定予想")
 
+    marks = st.session_state.setdefault('horse_marks', {})
     card_cache = load_cached_card_info(lst)
 
-    # カラーマークの変更を先に処理（ボタン押下後の即時反映のため）
-    marks = st.session_state.setdefault('horse_marks', {})
-    for i, reg_no in enumerate(lst):
-        for color in MARK_CYCLE[1:]:  # red, blue, green
-            btn_key = f'mark_{color}_{session_key}_{i}'
-            if st.session_state.get(btn_key):
-                current = marks.get(reg_no, '')
-                marks[reg_no] = '' if current == color else color
-                save_lists()
-                st.rerun()
+    # ── ドラッグ&ドロップ並び替え ──
+    display_items = [_make_display(r, marks) for r in lst]
+    # 重複表示文字列に reg_no サフィックスを付けて一意化
+    seen: dict[str, int] = {}
+    unique_items = []
+    for item, reg_no in zip(display_items, lst):
+        if item in seen:
+            item = f"{item} [{reg_no[-6:]}]"
+        seen[item] = 1
+        unique_items.append(item)
 
-    move_up = None
-    move_down = None
+    display_to_reg = dict(zip(unique_items, lst))
+
+    sorted_display = sort_items(unique_items, direction="vertical", key=f"sort_{session_key}")
+    new_lst = [display_to_reg[d] for d in sorted_display]
+
+    if new_lst != lst:
+        st.session_state[session_key] = new_lst
+        save_lists()
+        lst = new_lst
+
+    st.divider()
+
+    # ── 詳細カード（✕・カラーマーク・情報） ──
     indices_to_remove = []
 
     for i, reg_no in enumerate(lst):
         info = id_to_info.get(reg_no, {})
         name = info.get('馬名', reg_no)
-        sire = info.get('父名', '')
+        sire = info.get('父名', '') or ''
         is_ach = info.get('称号候補', False)
         badge = "🏆 " if is_ach else ""
         nominated = "🟢" if i < 5 else "⚪"
         ach_text = info.get('称号説明', '')
         current_mark = marks.get(reg_no, '')
-        mark_display = MARK_EMOJI.get(current_mark, '')
+        mark_emoji = MARK_EMOJI.get(current_mark, '')
 
         netkeiba_url = f"https://db.netkeiba.com/horse/{reg_no}/"
-        col_rank, col_name, col_up, col_down, col_rm = st.columns([1, 7, 1, 1, 1])
+        col_rank, col_name, col_rm = st.columns([1, 8, 1])
 
         with col_rank:
             st.write(f"{nominated} **{i+1}**")
 
         with col_name:
-            name_line = f"{badge}**{name}**（{sire}）　[🔗]({netkeiba_url})"
-            if mark_display:
-                name_line = f"{mark_display} " + name_line
-            st.markdown(name_line)
+            header = f"{mark_emoji + ' ' if mark_emoji else ''}{badge}**{name}**（{sire}）　[🔗]({netkeiba_url})"
+            st.markdown(header)
             if ach_text:
                 st.caption(ach_text[:60])
 
             # カラーマークボタン
-            mc1, mc2, mc3 = st.columns(3)
+            mc1, mc2, mc3, mc4 = st.columns([1, 1, 1, 5])
             with mc1:
-                st.button('🔴', key=f'mark_red_{session_key}_{i}',
-                          type='primary' if current_mark == 'red' else 'secondary',
-                          use_container_width=True)
+                if st.button('🔴', key=f'red_{session_key}_{i}',
+                             type='primary' if current_mark == 'red' else 'secondary'):
+                    marks[reg_no] = '' if current_mark == 'red' else 'red'
+                    save_lists()
+                    st.rerun()
             with mc2:
-                st.button('🔵', key=f'mark_blue_{session_key}_{i}',
-                          type='primary' if current_mark == 'blue' else 'secondary',
-                          use_container_width=True)
+                if st.button('🔵', key=f'blue_{session_key}_{i}',
+                             type='primary' if current_mark == 'blue' else 'secondary'):
+                    marks[reg_no] = '' if current_mark == 'blue' else 'blue'
+                    save_lists()
+                    st.rerun()
             with mc3:
-                st.button('🟢', key=f'mark_green_{session_key}_{i}',
-                          type='primary' if current_mark == 'green' else 'secondary',
-                          use_container_width=True)
+                if st.button('🟢', key=f'green_{session_key}_{i}',
+                             type='primary' if current_mark == 'green' else 'secondary'):
+                    marks[reg_no] = '' if current_mark == 'green' else 'green'
+                    save_lists()
+                    st.rerun()
 
-            _render_card(info, card_cache.get(reg_no))
+            # 情報カード
+            card = card_cache.get(reg_no)
+            sire_v = info.get('父名', '') or ''
+            dam = info.get('母名', '') or ''
+            damsire = info.get('母父名', '') or ''
+            breeder = info.get('生産者', '') or ''
+            trainer = info.get('調教師', '') or ''
+            siblings_total = info.get('兄弟賞金合計', 0)
 
-        with col_up:
-            if i > 0 and st.button("↑", key=f"up_{session_key}_{i}"):
-                move_up = i
-        with col_down:
-            if i < len(lst) - 1 and st.button("↓", key=f"dn_{session_key}_{i}"):
-                move_down = i
+            pedigree = f"父 **{sire_v}**" if sire_v else ''
+            if dam:
+                pedigree += f"　母 {dam}"
+                if damsire:
+                    pedigree += f"（母父 {damsire}）"
+            if pedigree:
+                st.caption(pedigree)
+
+            farm_line = ''
+            if breeder:
+                farm_line += f"🌾 {breeder}"
+            if trainer and str(trainer) not in ('nan', ''):
+                farm_line += f"　🏛 {trainer}"
+            if farm_line:
+                st.caption(farm_line)
+
+            detail_parts = []
+            prize_str = _format_prize(siblings_total)
+            if prize_str:
+                detail_parts.append(f"兄弟賞金合計: {prize_str}")
+            if card is not None:
+                detail_parts.append(f"💬 掲示板: {card.get('bbs_count', 0)}件")
+            else:
+                detail_parts.append("💬 掲示板: 未取得")
+            st.caption("　".join(detail_parts))
+
+            if card is not None:
+                rels = card.get('relatives', [])
+                if rels:
+                    st.caption("活躍近親: " + " / ".join(rels[:3]))
+
         with col_rm:
             if st.button("✕", key=f"rm_{session_key}_{i}"):
                 indices_to_remove.append(i)
 
-    changed = False
-    if move_up is not None:
-        lst[move_up - 1], lst[move_up] = lst[move_up], lst[move_up - 1]
-        changed = True
-    if move_down is not None:
-        lst[move_down], lst[move_down + 1] = lst[move_down + 1], lst[move_down]
-        changed = True
     if indices_to_remove:
         for i in sorted(indices_to_remove, reverse=True):
             lst.pop(i)
-        changed = True
-    st.session_state[session_key] = lst
-    if changed:
+        st.session_state[session_key] = lst
         save_lists()
         st.rerun()
 
