@@ -81,15 +81,10 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False, tab_prefi
             label_parts.append(f"💬 {comment[:40]}...")
         label = "　".join(label_parts)
 
-        # 常時表示: net競馬直リンク
-        row_col, link_col = st.columns([8, 2])
-        with row_col:
-            expander_open = st.expander(label)
-        with link_col:
-            if netkeiba_url:
-                st.markdown(f"[🔗 net競馬]({netkeiba_url})", unsafe_allow_html=False)
+        if netkeiba_url:
+            st.markdown(f"<small>[🔗 net競馬で開く]({netkeiba_url})　[💬 掲示板]({netkeiba_bbs_url})</small>", unsafe_allow_html=True)
 
-        with expander_open:
+        with st.expander(label):
             col1, col2 = st.columns(2)
             with col1:
                 st.write(f"**性別:** {sex}　**産地:** {region}")
@@ -101,15 +96,6 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False, tab_prefi
                 if siblings:
                     st.write(f"**近親馬:** {siblings}")
 
-            # netkeiba リンク（expander内にも）
-            st.divider()
-            link_parts = []
-            if netkeiba_url:
-                link_parts.append(f"[📊 net競馬プロフィール]({netkeiba_url})")
-            if netkeiba_bbs_url:
-                link_parts.append(f"[💬 掲示板・コメント]({netkeiba_bbs_url})")
-            if link_parts:
-                st.markdown("　".join(link_parts))
 
             # 他POGサイトリンク
             st.markdown("**他POGサイトで検索:** " + _pog_links(name))
