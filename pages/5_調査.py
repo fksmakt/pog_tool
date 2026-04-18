@@ -41,11 +41,10 @@ def apply_filters(items: list[dict]) -> list[dict]:
 
 
 def _pog_links(horse_name: str) -> str:
-    """各POGサイトへの検索リンクをMarkdownで返す"""
+    """他POGサイトへの検索リンクをMarkdownで返す（net競馬は直接リンクあるため除外）"""
     from urllib.parse import quote
     name_enc = quote(horse_name)
     links = [
-        f"[net競馬DB](https://db.netkeiba.com/?pid=horse_search_detail&word={name_enc})",
         f"[うまなりくん](https://umanari.com/pog/horse/?name={name_enc})",
         f"[POGの王様](https://pog.ne.jp/horse/?name={name_enc})",
     ]
