@@ -44,9 +44,9 @@ def _pog_links(horse_name: str, reg_no: str = '') -> str:
     links = []
     if reg_no and reg_no not in ('nan', ''):
         links.append(f"[net競馬POG](https://pog.netkeiba.com/?pid=pog_regist_list&horseid={reg_no})")
-    links.append(f"[うま徳POG](https://umatoku.hochi.co.jp/pog/2026/search?q={name_enc})")
+        umatoku_id = reg_no[2:] if len(reg_no) >= 3 else reg_no
+        links.append(f"[うま徳POG](https://umatoku.hochi.co.jp/pog/horse/{umatoku_id})")
     links.append(f"[X(Twitter)](https://x.com/search?q={name_enc}+POG)")
-    links.append(f"[Google](https://www.google.com/search?q={name_enc}+POG+競馬)")
     return " / ".join(links)
 
 
@@ -83,8 +83,15 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False, tab_prefi
             label_parts.append(f"💬 {comment[:40]}...")
         label = "　".join(label_parts)
 
+        _valid_no2 = reg_no and reg_no not in ('nan', '')
+        umatoku_url = f"https://umatoku.hochi.co.jp/pog/horse/{reg_no[2:]}" if _valid_no2 and len(reg_no) >= 3 else ''
+        link_parts = []
         if netkeiba_url:
-            st.markdown(f"<small>[🔗 net競馬で開く]({netkeiba_url})　[💬 掲示板]({netkeiba_bbs_url})</small>", unsafe_allow_html=True)
+            link_parts.append(f"[🔗 net競馬]({netkeiba_url})　[💬 掲示板]({netkeiba_bbs_url})")
+        if umatoku_url:
+            link_parts.append(f"[🐎 うま徳POG]({umatoku_url})")
+        if link_parts:
+            st.markdown(f"<small>{'　'.join(link_parts)}</small>", unsafe_allow_html=True)
 
         with st.expander(label):
             col1, col2 = st.columns(2)
