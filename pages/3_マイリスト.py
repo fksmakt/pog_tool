@@ -4,6 +4,7 @@ from data_loader import load_horses_with_flags
 from scraper import submit_draft
 from list_store import init_lists, save_lists
 from style import inject_css
+from research_scraper import fetch_horse_card_info, load_cached_card_info
 
 st.set_page_config(page_title="マイリスト")
 inject_css()
@@ -14,13 +15,76 @@ init_lists()
 with st.spinner("データ読み込み中..."):
     df = load_horses_with_flags()
 
-id_to_info = df.set_index('血統登録番号')[['馬名', '父名', '称号候補', '称号説明']].to_dict('index')
+_EXTRA_COLS = ['馬名', '父名', '母名', '母父名', '生産者', '調教師',
+               '称号候補', '称号説明', '兄弟賞金合計', '兄弟賞金平均']
+_available = [c for c in _EXTRA_COLS if c in df.columns]
+id_to_info = df.set_index('血統登録番号')[_available].to_dict('index')
+
+
+def _format_prize(amount) -> str:
+    try:
+        v = float(amount)
+    except (TypeError, ValueError):
+        return ''
+    if v <= 0:
+        return ''
+    if v >= 1e8:
+        return f'{v / 1e8:.1f}億円'
+    return f'{int(v / 1e4):,}万円'
+
+
+def _render_card(info: dict, card: dict | None):
+    sire = info.get('父名', '') or ''
+    dam = info.get('母名', '') or ''
+    damsire = info.get('母父名', '') or ''
+    breeder = info.get('生産者', '') or ''
+    trainer = info.get('調教師', '') or ''
+    siblings_total = info.get('兄弟賞金合計', 0)
+
+    # 血統行
+    pedigree = f"父 **{sire}**" if sire else ''
+    if dam:
+        pedigree += f"　母 {dam}"
+        if damsire:
+            pedigree += f"（母父 {damsire}）"
+    if pedigree:
+        st.caption(pedigree)
+
+    # 生産牧場・厩舎（最重要）
+    farm_line = ''
+    if breeder:
+        farm_line += f"🌾 {breeder}"
+    if trainer and str(trainer) not in ('nan', ''):
+        farm_line += f"　🏛 {trainer}"
+    if farm_line:
+        st.caption(farm_line)
+
+    # 兄弟賞金＋BBS
+    detail_parts = []
+    prize_str = _format_prize(siblings_total)
+    if prize_str:
+        detail_parts.append(f"兄弟賞金合計: {prize_str}")
+    if card is not None:
+        bbs = card.get('bbs_count', 0)
+        detail_parts.append(f"💬 掲示板: {bbs}件")
+    else:
+        detail_parts.append("💬 掲示板: 未取得")
+    st.caption("　".join(detail_parts))
+
+    # 活躍近親
+    if card is not None:
+        rels = card.get('relatives', [])
+        if rels:
+            st.caption("活躍近親: " + " / ".join(rels[:3]))
 
 
 def render_list(session_key: str):
     lst = st.session_state[session_key]
     max_count = 50
     st.caption(f"{len(lst)}/{max_count}頭 | 上位5頭が指名確定予想")
+
+    # キャッシュ済みのカード情報をまとめてロード
+    card_cache = load_cached_card_info(lst)
 
     indices_to_remove = []
     move_up = None
@@ -43,6 +107,7 @@ def render_list(session_key: str):
             st.markdown(f"{badge}**{name}**（{sire}）　[🔗]({netkeiba_url})")
             if ach_text:
                 st.caption(ach_text[:60])
+            _render_card(info, card_cache.get(reg_no))
         with col_up:
             if i > 0 and st.button("↑", key=f"up_{session_key}_{i}"):
                 move_up = i
@@ -67,6 +132,16 @@ def render_list(session_key: str):
     st.session_state[session_key] = lst
     if changed:
         save_lists()
+
+    # 未取得馬の一括取得ボタン
+    uncached = [r for r in lst if card_cache.get(r) is None]
+    if uncached:
+        if st.button(f"🔄 情報を一括取得（残り{len(uncached)}頭）", key=f"fetch_{session_key}"):
+            bar = st.progress(0)
+            for idx, reg_no in enumerate(uncached):
+                fetch_horse_card_info(reg_no, use_cache=False)
+                bar.progress((idx + 1) / len(uncached))
+            st.rerun()
 
 
 def render_bulk_input(session_key: str, label: str):

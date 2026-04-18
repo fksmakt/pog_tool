@@ -159,6 +159,97 @@ def fetch_netkeiba_profile(reg_no: str) -> dict:
         return {'trainer': '', 'comment': '', 'siblings': '', 'siblings_prize': 0}
 
 
+CACHE_HORSE_CARDS_DIR = CACHE_DIR / 'horse_cards'
+
+
+def fetch_horse_card_info(reg_no: str, use_cache: bool = True) -> dict:
+    """BBS件数と活躍近親馬3頭をnetkeibaから取得する。"""
+    CACHE_HORSE_CARDS_DIR.mkdir(exist_ok=True)
+    cache_file = CACHE_HORSE_CARDS_DIR / f'{reg_no}.json'
+
+    if use_cache and cache_file.exists():
+        if time.time() - cache_file.stat().st_mtime < 24 * 3600:
+            try:
+                return json.loads(cache_file.read_text(encoding='utf-8'))
+            except Exception:
+                pass
+
+    result: dict = {'bbs_count': 0, 'relatives': []}
+
+    # BBS件数
+    try:
+        r = requests.get(
+            f'https://db.netkeiba.com/?pid=horse_board&id={reg_no}',
+            headers=_HEADERS, timeout=15,
+        )
+        r.raise_for_status()
+        text = r.content.decode('euc-jp', errors='replace')
+        soup = BeautifulSoup(text, 'lxml')
+        body_text = soup.get_text(' ')
+        m = re.search(r'全\s*(\d+)\s*件', body_text) or re.search(r'(\d+)\s*件', body_text)
+        if m:
+            result['bbs_count'] = int(m.group(1))
+        else:
+            result['bbs_count'] = len(soup.find_all('dt'))
+    except Exception:
+        pass
+
+    time.sleep(0.3)
+
+    # 活躍近親馬（プロフィールページの兄弟・近親テーブル）
+    try:
+        r = requests.get(
+            f'https://db.netkeiba.com/horse/{reg_no}/',
+            headers=_HEADERS, timeout=15,
+        )
+        r.raise_for_status()
+        text = r.content.decode('euc-jp', errors='replace')
+        soup = BeautifulSoup(text, 'lxml')
+
+        relatives: list[str] = []
+        for table in soup.find_all('table'):
+            th_texts = ' '.join(th.get_text(strip=True) for th in table.find_all('th'))
+            if '馬名' not in th_texts:
+                continue
+            for tr in table.find_all('tr')[1:]:
+                tds = tr.find_all('td')
+                if not tds:
+                    continue
+                name = tds[0].get_text(strip=True)
+                if not name or re.match(r'^[\s\u3000]+$', name):
+                    continue
+                # 主な勝ち鞍や獲得賞金など後半セルから抜粋
+                snippet = ' '.join(td.get_text(' ', strip=True) for td in tds[3:])[:40].strip()
+                relatives.append(f'{name}（{snippet}）' if snippet else name)
+                if len(relatives) >= 3:
+                    break
+            if relatives:
+                break
+
+        result['relatives'] = relatives
+    except Exception:
+        pass
+
+    cache_file.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
+    return result
+
+
+def load_cached_card_info(reg_nos: list[str]) -> dict[str, dict | None]:
+    """キャッシュ済み馬の情報を返す。未取得はNone。"""
+    CACHE_HORSE_CARDS_DIR.mkdir(exist_ok=True)
+    out: dict[str, dict | None] = {}
+    for reg_no in reg_nos:
+        cache_file = CACHE_HORSE_CARDS_DIR / f'{reg_no}.json'
+        if cache_file.exists() and time.time() - cache_file.stat().st_mtime < 24 * 3600:
+            try:
+                out[reg_no] = json.loads(cache_file.read_text(encoding='utf-8'))
+                continue
+            except Exception:
+                pass
+        out[reg_no] = None
+    return out
+
+
 def enrich_with_netkeiba(items: list[dict], delay: float = 0.5) -> list[dict]:
     enriched = []
     for item in items:
