@@ -8,15 +8,13 @@ from research_scraper import (
     CACHE_REIDEOURO,
     CACHE_PAST_MARES,
 )
+from list_store import init_lists, save_lists
 
 st.set_page_config(page_title="調査")
 st.title("🔍 調査")
 st.markdown("レイデオロ産駒・過去指名牝馬の仔を複数サイトから調査します。")
 
-if 'male_list' not in st.session_state:
-    st.session_state.male_list = []
-if 'female_list' not in st.session_state:
-    st.session_state.female_list = []
+init_lists()
 
 with st.sidebar:
     st.header("🔍 フィルタ")
@@ -82,6 +80,8 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False, tab_prefi
         if comment:
             label_parts.append(f"💬 {comment[:40]}...")
         label = "　".join(label_parts)
+        if netkeiba_url:
+            label += f"　[🔗 net競馬]({netkeiba_url})"
 
         with st.expander(label):
             col1, col2 = st.columns(2)
@@ -122,6 +122,7 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False, tab_prefi
                 if st.button("➕ 牡リストへ", key=f"{tab_prefix}_add_m_{reg_no}"):
                     if reg_no not in st.session_state.male_list:
                         st.session_state.male_list.append(reg_no)
+                        save_lists()
                         st.success(f"{name} を牡リストに追加")
                     else:
                         st.warning("すでに牡リストにあります")
@@ -129,6 +130,7 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False, tab_prefi
                 if st.button("➕ 牝リストへ", key=f"{tab_prefix}_add_f_{reg_no}"):
                     if reg_no not in st.session_state.female_list:
                         st.session_state.female_list.append(reg_no)
+                        save_lists()
                         st.success(f"{name} を牝リストに追加")
                     else:
                         st.warning("すでに牝リストにあります")

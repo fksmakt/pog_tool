@@ -2,14 +2,12 @@
 import streamlit as st
 from data_loader import load_horses_with_flags
 from scraper import submit_draft
+from list_store import init_lists, save_lists
 
 st.set_page_config(page_title="マイリスト")
 st.title("📋 マイリスト")
 
-if 'male_list' not in st.session_state:
-    st.session_state.male_list = []
-if 'female_list' not in st.session_state:
-    st.session_state.female_list = []
+init_lists()
 
 with st.spinner("データ読み込み中..."):
     df = load_horses_with_flags()
@@ -52,17 +50,23 @@ def render_list(session_key: str):
             if st.button("✕", key=f"rm_{session_key}_{i}"):
                 indices_to_remove.append(i)
 
+    changed = False
     if move_up is not None:
         lst[move_up - 1], lst[move_up] = lst[move_up], lst[move_up - 1]
+        changed = True
     if move_down is not None:
         lst[move_down], lst[move_down + 1] = lst[move_down + 1], lst[move_down]
-    for i in sorted(indices_to_remove, reverse=True):
-        lst.pop(i)
+        changed = True
+    if indices_to_remove:
+        for i in sorted(indices_to_remove, reverse=True):
+            lst.pop(i)
+        changed = True
     st.session_state[session_key] = lst
+    if changed:
+        save_lists()
 
 
 def render_bulk_input(session_key: str, label: str):
-    """血統登録番号を改行区切りで貼り付けてリストを上書きする"""
     current = '\n'.join(st.session_state[session_key])
     new_text = st.text_area(
         f"{label} — 血統登録番号を1行1頭で貼り付け（1〜50位順）",
@@ -76,12 +80,12 @@ def render_bulk_input(session_key: str, label: str):
         valid = [l for l in lines if df['血統登録番号'].eq(l).any()]
         invalid = [l for l in lines if l not in valid]
         st.session_state[session_key] = valid[:50]
+        save_lists()
         if invalid:
             st.warning(f"⚠️ 見つからない番号をスキップしました: {', '.join(invalid[:5])}")
         st.success(f"{len(valid[:50])}頭を{label}に設定しました")
         st.rerun()
 
-    # コピー用テキスト
     if st.session_state[session_key]:
         st.caption("📋 現在のリスト（コピー用）")
         st.code('\n'.join(st.session_state[session_key]), language=None)

@@ -2,6 +2,7 @@
 import streamlit as st
 from data_loader import load_horses_with_flags
 from scraper import fetch_advice
+from list_store import init_lists, save_lists
 
 st.set_page_config(page_title="称号狙い")
 st.title("🏆 称号狙い候補")
@@ -11,10 +12,7 @@ st.markdown("""
 ぽぐ！サイトの `advice.php` データを元にしています。
 """)
 
-if 'male_list' not in st.session_state:
-    st.session_state.male_list = []
-if 'female_list' not in st.session_state:
-    st.session_state.female_list = []
+init_lists()
 
 with st.spinner("データ読み込み中..."):
     df = load_horses_with_flags()
@@ -38,6 +36,7 @@ def show_advice(advice_list, sex_label):
                     target = st.session_state.male_list if sex_label == '牡' else st.session_state.female_list
                     if reg_no not in target:
                         target.append(reg_no)
+                        save_lists()
                         st.success("追加しました！")
             else:
                 st.warning(f"⚠️ この馬は全頭リストに見つかりませんでした: {horse_name}")

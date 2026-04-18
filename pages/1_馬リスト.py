@@ -2,15 +2,12 @@
 import streamlit as st
 import pandas as pd
 from data_loader import load_horses_with_flags
+from list_store import init_lists, save_lists
 
 st.set_page_config(page_title="馬リスト")
 st.title("🐎 馬リスト")
 
-# セッション状態の初期化
-if 'male_list' not in st.session_state:
-    st.session_state.male_list = []   # 血統登録番号のリスト
-if 'female_list' not in st.session_state:
-    st.session_state.female_list = []
+init_lists()
 
 with st.spinner("データ読み込み中..."):
     df = load_horses_with_flags()
@@ -69,12 +66,14 @@ if st.button("➕ リストに追加", type="primary"):
         elif add_sex == "牡リスト":
             if selected_no not in st.session_state.male_list:
                 st.session_state.male_list.append(selected_no)
+                save_lists()
                 st.success(f"✅ {match.iloc[0]['馬名']} を牡リストに追加しました")
             else:
                 st.warning("すでにリストに入っています")
         else:
             if selected_no not in st.session_state.female_list:
                 st.session_state.female_list.append(selected_no)
+                save_lists()
                 st.success(f"✅ {match.iloc[0]['馬名']} を牝リストに追加しました")
             else:
                 st.warning("すでにリストに入っています")
