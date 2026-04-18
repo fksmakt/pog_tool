@@ -38,14 +38,15 @@ def apply_filters(items: list[dict]) -> list[dict]:
     return items
 
 
-def _pog_links(horse_name: str) -> str:
-    """他POGサイトへの検索リンクをMarkdownで返す（net競馬は直接リンクあるため除外）"""
+def _pog_links(horse_name: str, reg_no: str = '') -> str:
     from urllib.parse import quote
     name_enc = quote(horse_name)
-    links = [
-        f"[うまなりくん](https://umanari.com/pog/horse/?name={name_enc})",
-        f"[POGの王様](https://pog.ne.jp/horse/?name={name_enc})",
-    ]
+    links = []
+    if reg_no and reg_no not in ('nan', ''):
+        links.append(f"[net競馬POG](https://pog.netkeiba.com/?pid=pog_regist_list&horseid={reg_no})")
+    links.append(f"[うま徳POG](https://umatoku.hochi.co.jp/pog/2026/search?q={name_enc})")
+    links.append(f"[X(Twitter)](https://x.com/search?q={name_enc}+POG)")
+    links.append(f"[Google](https://www.google.com/search?q={name_enc}+POG+競馬)")
     return " / ".join(links)
 
 
@@ -99,7 +100,7 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False, tab_prefi
 
 
             # 他POGサイトリンク
-            st.markdown("**他POGサイトで検索:** " + _pog_links(name))
+            st.markdown("**POG情報源:** " + _pog_links(name, reg_no))
 
             # 近況コメント
             st.divider()
