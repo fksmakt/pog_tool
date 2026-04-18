@@ -18,7 +18,6 @@ if 'male_list' not in st.session_state:
 if 'female_list' not in st.session_state:
     st.session_state.female_list = []
 
-# ===== サイドバー =====
 with st.sidebar:
     st.header("🔍 フィルタ")
     sex_filter = st.radio("性別", ["全て", "牡", "牝"])
@@ -41,7 +40,19 @@ def apply_filters(items: list[dict]) -> list[dict]:
     return items
 
 
-def render_horse_table(items: list[dict], show_dam_year: bool = False):
+def _pog_links(horse_name: str) -> str:
+    """各POGサイトへの検索リンクをMarkdownで返す"""
+    from urllib.parse import quote
+    name_enc = quote(horse_name)
+    links = [
+        f"[net競馬DB](https://db.netkeiba.com/?pid=horse_search_detail&word={name_enc})",
+        f"[うまなりくん](https://umanari.com/pog/horse/?name={name_enc})",
+        f"[POGの王様](https://pog.ne.jp/horse/?name={name_enc})",
+    ]
+    return " / ".join(links)
+
+
+def render_horse_table(items: list[dict], show_dam_year: bool = False, tab_prefix: str = ""):
     if not items:
         st.info("該当する馬が見つかりません。")
         return
@@ -60,6 +71,8 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False):
         comment = item.get('netkeiba', {}).get('comment', '')
         siblings = item.get('netkeiba', {}).get('siblings', '')
         dam_year = item.get('dam_nominated_year')
+        netkeiba_url = item.get('netkeiba_url', '')
+        netkeiba_bbs_url = item.get('netkeiba_bbs_url', '')
 
         badge = "🏆 " if is_ach else ""
         label_parts = [f"{badge}{name}（{sex}）"]
@@ -74,8 +87,7 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False):
         with st.expander(label):
             col1, col2 = st.columns(2)
             with col1:
-                st.write(f"**性別:** {sex}")
-                st.write(f"**産地:** {region}")
+                st.write(f"**性別:** {sex}　**産地:** {region}")
                 st.write(f"**調教師:** {trainer}")
                 st.write(f"**取引価格:** {price}")
             with col2:
@@ -84,24 +96,38 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False):
                 if siblings:
                     st.write(f"**近親馬:** {siblings}")
 
+            # netkeiba リンク
+            st.divider()
+            link_parts = []
+            if netkeiba_url:
+                link_parts.append(f"[📊 net競馬プロフィール]({netkeiba_url})")
+            if netkeiba_bbs_url:
+                link_parts.append(f"[💬 掲示板・コメント]({netkeiba_bbs_url})")
+            if link_parts:
+                st.markdown("　".join(link_parts))
+
+            # 他POGサイトリンク
+            st.markdown("**他POGサイトで検索:** " + _pog_links(name))
+
+            # 近況コメント
             st.divider()
             st.write("**📰 net競馬 近況**")
             if comment:
                 st.info(comment)
             else:
-                st.caption("近況情報なし")
+                st.caption("近況情報なし（「net競馬プロフィール」から直接確認できます）")
 
             st.divider()
             col_m, col_f = st.columns(2)
             with col_m:
-                if st.button("➕ 牡リストへ", key=f"add_m_{reg_no}"):
+                if st.button("➕ 牡リストへ", key=f"{tab_prefix}_add_m_{reg_no}"):
                     if reg_no not in st.session_state.male_list:
                         st.session_state.male_list.append(reg_no)
                         st.success(f"{name} を牡リストに追加")
                     else:
                         st.warning("すでに牡リストにあります")
             with col_f:
-                if st.button("➕ 牝リストへ", key=f"add_f_{reg_no}"):
+                if st.button("➕ 牝リストへ", key=f"{tab_prefix}_add_f_{reg_no}"):
                     if reg_no not in st.session_state.female_list:
                         st.session_state.female_list.append(reg_no)
                         st.success(f"{name} を牝リストに追加")
@@ -117,10 +143,10 @@ with tab1:
         if force_refresh:
             rei_items = enrich_with_netkeiba(rei_items)
             save_research_cache(CACHE_REIDEOURO, rei_items)
-    st.caption(f"{len(rei_items)}頭")
+    st.caption(f"{len(rei_items)}頭（過去指名牝馬の仔はタブ2に表示）")
     filtered_rei = apply_filters(rei_items)
     st.caption(f"フィルタ後: {len(filtered_rei)}頭")
-    render_horse_table(filtered_rei, show_dam_year=False)
+    render_horse_table(filtered_rei, show_dam_year=False, tab_prefix="tab1")
 
 with tab2:
     with st.spinner("過去指名牝馬の仔を読み込み中..."):
@@ -128,7 +154,7 @@ with tab2:
         if force_refresh:
             mare_items = enrich_with_netkeiba(mare_items)
             save_research_cache(CACHE_PAST_MARES, mare_items)
-    st.caption(f"{len(mare_items)}頭")
+    st.caption(f"{len(mare_items)}頭（父レイデオロ含む）")
     filtered_mares = apply_filters(mare_items)
     st.caption(f"フィルタ後: {len(filtered_mares)}頭")
-    render_horse_table(filtered_mares, show_dam_year=True)
+    render_horse_table(filtered_mares, show_dam_year=True, tab_prefix="tab2")

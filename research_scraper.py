@@ -32,19 +32,23 @@ def save_research_cache(cache_file: Path, data: list) -> None:
 
 
 def _row_to_research_item(row: pd.Series, dam_nominated_year: int | None) -> dict:
+    reg_no = str(row.get('血統登録番号', ''))
+    horse_name = str(row.get('馬名', ''))
     return {
-        'horse_name': str(row.get('馬名', '')),
+        'horse_name': horse_name,
         'sex': str(row.get('性別', '')),
         'dam': str(row.get('母名', '')),
         'sire': str(row.get('父名', '')),
         'trainer': str(row.get('調教師', '')),
         'stable': '',
-        'reg_no': str(row.get('血統登録番号', '')),
+        'reg_no': reg_no,
         'region': str(row.get('産地', '')),
         'price': str(row.get('取引価格', '')),
         'achievement_flag': bool(row.get('称号候補', False)),
         'achievement_desc': str(row.get('称号説明', '')),
         'dam_nominated_year': dam_nominated_year,
+        'netkeiba_url': f'https://db.netkeiba.com/horse/{reg_no}/' if reg_no else '',
+        'netkeiba_bbs_url': f'https://db.netkeiba.com/?pid=horse_board&id={reg_no}' if reg_no else '',
         'netkeiba': {
             'comment': '',
             'trainer': str(row.get('調教師', '')),
@@ -63,10 +67,24 @@ def get_reideouro_offspring(use_cache: bool = True) -> list[dict]:
             return cached
     from data_loader import load_horses_with_flags
     df = load_horses_with_flags()
-    rei = df[df['父名'] == 'レイデオロ'].copy()
+    # 過去指名牝馬の仔はタブ2優先なので除外
+    past_mare_names = _get_nominated_mare_names()
+    rei = df[(df['父名'] == 'レイデオロ') & (~df['母名'].isin(past_mare_names))].copy()
     results = [_row_to_research_item(row, dam_nominated_year=None) for _, row in rei.iterrows()]
     save_research_cache(CACHE_REIDEOURO, results)
     return results
+
+
+def _get_nominated_mare_names() -> set[str]:
+    if not HISTORY_PATH.exists():
+        return set()
+    history = json.loads(HISTORY_PATH.read_text(encoding='utf-8'))
+    names: set[str] = set()
+    for horses in history.values():
+        for h in horses:
+            if h.get('sex') == '牝':
+                names.add(h['name'])
+    return names
 
 
 def get_past_nominated_mares(use_cache: bool = True) -> list[dict]:
