@@ -4,8 +4,10 @@ from pathlib import Path
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from style import inject_css
 
 st.set_page_config(page_title="分析")
+inject_css()
 st.title("📊 過去20年の傾向分析")
 
 HISTORY_PATH = Path(__file__).parent.parent / 'cache' / 'history.json'

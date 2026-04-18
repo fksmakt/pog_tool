@@ -3,8 +3,10 @@ import streamlit as st
 from data_loader import load_horses_with_flags
 from scraper import submit_draft
 from list_store import init_lists, save_lists
+from style import inject_css
 
 st.set_page_config(page_title="マイリスト")
+inject_css()
 st.title("📋 マイリスト")
 
 init_lists()

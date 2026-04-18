@@ -3,8 +3,10 @@ import streamlit as st
 import pandas as pd
 from data_loader import load_horses_with_flags
 from list_store import init_lists, save_lists
+from style import inject_css
 
 st.set_page_config(page_title="馬リスト")
+inject_css()
 st.title("🐎 馬リスト")
 
 init_lists()

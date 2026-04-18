@@ -3,8 +3,10 @@ import streamlit as st
 from data_loader import load_horses_with_flags
 from scraper import fetch_advice
 from list_store import init_lists, save_lists
+from style import inject_css
 
 st.set_page_config(page_title="称号狙い")
+inject_css()
 st.title("🏆 称号狙い候補")
 
 st.markdown("""

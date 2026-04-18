@@ -1,10 +1,12 @@
 import streamlit as st
+from style import inject_css
 
 st.set_page_config(
     page_title="ぷにのPOGツール",
     page_icon="🏇",
 )
 
+inject_css()
 st.title("🏇 ぷにのPOGツール 2026-2027")
 st.markdown("""
 左のサイドバー（☰）からページを選んでください。

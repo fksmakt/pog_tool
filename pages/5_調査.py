@@ -1,5 +1,6 @@
 # pages/5_調査.py
 import streamlit as st
+from style import inject_css
 from research_scraper import (
     get_reideouro_offspring,
     get_past_nominated_mares,
@@ -11,6 +12,7 @@ from research_scraper import (
 from list_store import init_lists, save_lists
 
 st.set_page_config(page_title="調査")
+inject_css()
 st.title("🔍 調査")
 st.markdown("レイデオロ産駒・過去指名牝馬の仔を複数サイトから調査します。")
 
