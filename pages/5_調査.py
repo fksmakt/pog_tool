@@ -68,8 +68,9 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False, tab_prefi
         comment = item.get('netkeiba', {}).get('comment', '')
         siblings = item.get('netkeiba', {}).get('siblings', '')
         dam_year = item.get('dam_nominated_year')
-        netkeiba_url = item.get('netkeiba_url', '')
-        netkeiba_bbs_url = item.get('netkeiba_bbs_url', '')
+        _valid_no = reg_no and reg_no not in ('nan', '')
+        netkeiba_url = item.get('netkeiba_url') or (f"https://db.netkeiba.com/horse/{reg_no}/" if _valid_no else '')
+        netkeiba_bbs_url = item.get('netkeiba_bbs_url') or (f"https://db.netkeiba.com/?pid=horse_board&id={reg_no}" if _valid_no else '')
 
         badge = "🏆 " if is_ach else ""
         label_parts = [f"{badge}{name}（{sex}）"]
