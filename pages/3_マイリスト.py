@@ -33,11 +33,12 @@ def render_list(session_key: str):
         nominated = "🟢" if i < 5 else "⚪"
         ach_text = info.get('称号説明', '')
 
+        netkeiba_url = f"https://db.netkeiba.com/horse/{reg_no}/"
         col_rank, col_name, col_up, col_down, col_rm = st.columns([1, 7, 1, 1, 1])
         with col_rank:
             st.write(f"{nominated} **{i+1}**")
         with col_name:
-            st.write(f"{badge}{name}（{sire}）")
+            st.markdown(f"{badge}**{name}**（{sire}）　[🔗]({netkeiba_url})")
             if ach_text:
                 st.caption(ach_text[:60])
         with col_up:
