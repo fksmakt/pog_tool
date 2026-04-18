@@ -137,16 +137,31 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False, tab_prefi
 
 tab1, tab2 = st.tabs(["🐴 レイデオロ産駒", "👑 過去指名牝馬の仔"])
 
+def render_by_sex(items: list[dict], show_dam_year: bool, tab_prefix: str):
+    males = [x for x in items if x.get('sex') == '牡']
+    females = [x for x in items if x.get('sex') == '牝']
+    others = [x for x in items if x.get('sex') not in ('牡', '牝')]
+
+    st.subheader(f"🔵 牡馬 ({len(males)}頭)")
+    render_horse_table(males, show_dam_year=show_dam_year, tab_prefix=f"{tab_prefix}_m")
+
+    st.subheader(f"🔴 牝馬 ({len(females)}頭)")
+    render_horse_table(females, show_dam_year=show_dam_year, tab_prefix=f"{tab_prefix}_f")
+
+    if others:
+        st.subheader(f"その他 ({len(others)}頭)")
+        render_horse_table(others, show_dam_year=show_dam_year, tab_prefix=f"{tab_prefix}_o")
+
+
 with tab1:
     with st.spinner("レイデオロ産駒を読み込み中..."):
         rei_items = get_reideouro_offspring(use_cache=not force_refresh)
         if force_refresh:
             rei_items = enrich_with_netkeiba(rei_items)
             save_research_cache(CACHE_REIDEOURO, rei_items)
-    st.caption(f"{len(rei_items)}頭（過去指名牝馬の仔はタブ2に表示）")
     filtered_rei = apply_filters(rei_items)
-    st.caption(f"フィルタ後: {len(filtered_rei)}頭")
-    render_horse_table(filtered_rei, show_dam_year=False, tab_prefix="tab1")
+    st.caption(f"計{len(filtered_rei)}頭（過去指名牝馬の仔はタブ2に表示）")
+    render_by_sex(filtered_rei, show_dam_year=False, tab_prefix="tab1")
 
 with tab2:
     with st.spinner("過去指名牝馬の仔を読み込み中..."):
@@ -154,7 +169,6 @@ with tab2:
         if force_refresh:
             mare_items = enrich_with_netkeiba(mare_items)
             save_research_cache(CACHE_PAST_MARES, mare_items)
-    st.caption(f"{len(mare_items)}頭（父レイデオロ含む）")
     filtered_mares = apply_filters(mare_items)
-    st.caption(f"フィルタ後: {len(filtered_mares)}頭")
-    render_horse_table(filtered_mares, show_dam_year=True, tab_prefix="tab2")
+    st.caption(f"計{len(filtered_mares)}頭（父レイデオロ含む）")
+    render_by_sex(filtered_mares, show_dam_year=True, tab_prefix="tab2")
