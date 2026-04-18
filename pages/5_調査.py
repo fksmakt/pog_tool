@@ -77,7 +77,7 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False, tab_prefi
         badge = "🏆 " if is_ach else ""
         label_parts = [f"{badge}{name}（{sex}）"]
         if show_dam_year and dam_year:
-            label_parts.append(f"母: {dam}（{dam_year}年指名）")
+            label_parts.append(f"父: {sire}　母: {dam}（{dam_year}年指名）")
         else:
             label_parts.append(f"母: {dam} × {sire}")
         if comment:
