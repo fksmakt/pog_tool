@@ -26,7 +26,7 @@ def _format_prize(amount) -> str:
         v = float(amount)
     except (TypeError, ValueError):
         return ''
-    if v <= 0:
+    if not (v > 0):  # NaN・0・負をまとめて除外
         return ''
     if v >= 1e8:
         return f'{v / 1e8:.1f}億円'
