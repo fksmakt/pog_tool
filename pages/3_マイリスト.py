@@ -37,13 +37,12 @@ def _format_prize(amount) -> str:
     return f'{int(v / 1e4):,}万円'
 
 
-def _make_display(reg_no: str, marks: dict) -> str:
+def _make_display(reg_no: str) -> str:
+    """ドラッグリスト用の表示文字列（マーク絵文字は含めない）。"""
     info = id_to_info.get(reg_no, {})
     name = info.get('馬名', reg_no)
     sire = info.get('父名', '') or ''
-    mark = marks.get(reg_no, '')
-    prefix = MARK_EMOJI.get(mark, '') + ' ' if mark else ''
-    return f"{prefix}{name}（{sire}）"
+    return f"{name}（{sire}）"
 
 
 def render_list(session_key: str):
@@ -55,20 +54,25 @@ def render_list(session_key: str):
     card_cache = load_cached_card_info(lst)
 
     # ── ドラッグ&ドロップ並び替え ──
-    display_items = [_make_display(r, marks) for r in lst]
-    # 重複表示文字列に reg_no サフィックスを付けて一意化
-    seen: dict[str, int] = {}
+    # マーク絵文字は含めない（絵文字変更時に逆引きがずれるのを防ぐ）
+    seen: set[str] = set()
     unique_items = []
-    for item, reg_no in zip(display_items, lst):
+    for reg_no in lst:
+        item = _make_display(reg_no)
+        # 同名馬がいる場合のみ reg_no 末尾6桁を付加して一意化
         if item in seen:
             item = f"{item} [{reg_no[-6:]}]"
-        seen[item] = 1
+        seen.add(item)
         unique_items.append(item)
 
     display_to_reg = dict(zip(unique_items, lst))
 
     sorted_display = sort_items(unique_items, direction="vertical", key=f"sort_{session_key}")
-    new_lst = [display_to_reg[d] for d in sorted_display]
+
+    # 逆引きできない項目（コンポーネントの状態ずれ）はスキップして安全にフォールバック
+    new_lst = [display_to_reg[d] for d in sorted_display if d in display_to_reg]
+    if len(new_lst) != len(lst):
+        new_lst = lst  # 件数不一致は無視して現状維持
 
     if new_lst != lst:
         st.session_state[session_key] = new_lst
