@@ -17,45 +17,93 @@ with st.spinner("データ読み込み中..."):
 id_to_info = df.set_index('血統登録番号')[['馬名', '父名', '称号候補', '称号説明']].to_dict('index')
 
 
-def render_list(session_key: str, sex_label: str):
+def render_list(session_key: str):
     lst = st.session_state[session_key]
     max_count = 50
-    count = len(lst)
-    st.caption(f"{count}/{max_count}頭 | 上位5頭が指名確定予想")
+    st.caption(f"{len(lst)}/{max_count}頭 | 上位5頭が指名確定予想")
 
     indices_to_remove = []
+    move_up = None
+    move_down = None
+
     for i, reg_no in enumerate(lst):
         info = id_to_info.get(reg_no, {})
         name = info.get('馬名', reg_no)
         sire = info.get('父名', '')
         is_ach = info.get('称号候補', False)
-        bg = "🏆 " if is_ach else ""
+        badge = "🏆 " if is_ach else ""
         nominated = "🟢" if i < 5 else "⚪"
+        ach_text = info.get('称号説明', '')
 
-        col1, col2, col3 = st.columns([1, 7, 1])
-        with col1:
+        col_rank, col_name, col_up, col_down, col_rm = st.columns([1, 7, 1, 1, 1])
+        with col_rank:
             st.write(f"{nominated} **{i+1}**")
-        with col2:
-            ach_text = info.get('称号説明', '')
-            st.write(f"{bg}{name}（{sire}）")
+        with col_name:
+            st.write(f"{badge}{name}（{sire}）")
             if ach_text:
                 st.caption(ach_text[:60])
-        with col3:
+        with col_up:
+            if i > 0 and st.button("↑", key=f"up_{session_key}_{i}"):
+                move_up = i
+        with col_down:
+            if i < len(lst) - 1 and st.button("↓", key=f"dn_{session_key}_{i}"):
+                move_down = i
+        with col_rm:
             if st.button("✕", key=f"rm_{session_key}_{i}"):
                 indices_to_remove.append(i)
 
+    if move_up is not None:
+        lst[move_up - 1], lst[move_up] = lst[move_up], lst[move_up - 1]
+    if move_down is not None:
+        lst[move_down], lst[move_down + 1] = lst[move_down + 1], lst[move_down]
     for i in sorted(indices_to_remove, reverse=True):
         lst.pop(i)
     st.session_state[session_key] = lst
 
 
+def render_bulk_input(session_key: str, label: str):
+    """血統登録番号を改行区切りで貼り付けてリストを上書きする"""
+    current = '\n'.join(st.session_state[session_key])
+    new_text = st.text_area(
+        f"{label} — 血統登録番号を1行1頭で貼り付け（1〜50位順）",
+        value=current,
+        height=200,
+        key=f"bulk_{session_key}",
+        placeholder="2024100001\n2024100002\n...",
+    )
+    if st.button(f"✅ {label}を更新", key=f"bulk_apply_{session_key}"):
+        lines = [l.strip() for l in new_text.splitlines() if l.strip()]
+        valid = [l for l in lines if df['血統登録番号'].eq(l).any()]
+        invalid = [l for l in lines if l not in valid]
+        st.session_state[session_key] = valid[:50]
+        if invalid:
+            st.warning(f"⚠️ 見つからない番号をスキップしました: {', '.join(invalid[:5])}")
+        st.success(f"{len(valid[:50])}頭を{label}に設定しました")
+        st.rerun()
+
+    # コピー用テキスト
+    if st.session_state[session_key]:
+        st.caption("📋 現在のリスト（コピー用）")
+        st.code('\n'.join(st.session_state[session_key]), language=None)
+
+
+# ===== 牡馬リスト =====
 st.subheader("🔵 牡馬リスト")
-render_list('male_list', '牡')
+tab_m_list, tab_m_edit = st.tabs(["並び替え", "一括貼り付け"])
+with tab_m_list:
+    render_list('male_list')
+with tab_m_edit:
+    render_bulk_input('male_list', '牡リスト')
 
 st.divider()
 
+# ===== 牝馬リスト =====
 st.subheader("🔴 牝馬リスト")
-render_list('female_list', '牝')
+tab_f_list, tab_f_edit = st.tabs(["並び替え", "一括貼り付け"])
+with tab_f_list:
+    render_list('female_list')
+with tab_f_edit:
+    render_bulk_input('female_list', '牝リスト')
 
 # ===== 送信セクション =====
 st.divider()
