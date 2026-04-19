@@ -60,6 +60,31 @@ def _row_to_research_item(row: pd.Series, dam_nominated_year: int | None) -> dic
     }
 
 
+def _parse_price_to_int(val) -> int:
+    import re
+    s = str(val).replace(',', '').replace(' ', '')
+    if not s or '--' in s or s == 'nan':
+        return 0
+    m = re.search(r'(\d+)', s)
+    return int(m.group(1)) * 10000 if m else 0
+
+
+def get_price_top_horses(top_n: int = 30) -> list[dict]:
+    """取引価格順の注目馬リスト（牡牝それぞれtop_n頭）を返す。"""
+    from data_loader import load_horses_with_flags
+    df = load_horses_with_flags().copy()
+    df['_price_int'] = df['取引価格'].apply(_parse_price_to_int)
+
+    results = []
+    for sex in ('牡', '牝'):
+        top = (df[df['性別'] == sex]
+               .sort_values('_price_int', ascending=False)
+               .head(top_n))
+        for _, row in top.iterrows():
+            results.append(_row_to_research_item(row, dam_nominated_year=None))
+    return results
+
+
 def get_reideouro_offspring(use_cache: bool = True) -> list[dict]:
     if use_cache:
         cached = load_research_cache(CACHE_REIDEOURO)

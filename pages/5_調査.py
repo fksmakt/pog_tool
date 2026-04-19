@@ -4,6 +4,7 @@ from style import inject_css
 from research_scraper import (
     get_reideouro_offspring,
     get_past_nominated_mares,
+    get_price_top_horses,
     enrich_with_netkeiba,
     save_research_cache,
     CACHE_REIDEOURO,
@@ -139,7 +140,7 @@ def render_horse_table(items: list[dict], show_dam_year: bool = False, tab_prefi
                         st.warning("すでに牝リストにあります")
 
 
-tab1, tab2 = st.tabs(["🐴 レイデオロ産駒", "👑 過去指名牝馬の仔"])
+tab1, tab2, tab3 = st.tabs(["🐴 レイデオロ産駒", "👑 過去指名牝馬の仔", "💰 注目馬TOP30"])
 
 def render_by_sex(items: list[dict], show_dam_year: bool, tab_prefix: str):
     males = [x for x in items if x.get('sex') == '牡']
@@ -176,3 +177,17 @@ with tab2:
     filtered_mares = apply_filters(mare_items)
     st.caption(f"計{len(filtered_mares)}頭（父レイデオロ含む）")
     render_by_sex(filtered_mares, show_dam_year=True, tab_prefix="tab2")
+
+with tab3:
+    st.markdown("取引価格（セリ落札額）の高い順に牡牝各30頭を表示します。")
+    with st.spinner("注目馬を読み込み中..."):
+        top_items = get_price_top_horses(top_n=30)
+    filtered_top = apply_filters(top_items)
+    males_top = [x for x in top_items if x.get('sex') == '牡']
+    females_top = [x for x in top_items if x.get('sex') == '牝']
+
+    st.subheader(f"🔵 牡馬 TOP30（取引価格順）")
+    render_horse_table(males_top, show_dam_year=False, tab_prefix="tab3_m")
+
+    st.subheader(f"🔴 牝馬 TOP30（取引価格順）")
+    render_horse_table(females_top, show_dam_year=False, tab_prefix="tab3_f")
